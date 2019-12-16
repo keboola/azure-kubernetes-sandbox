@@ -1,0 +1,100 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetName": {
+      "defaultValue": "aks-sandbox-vnet",
+      "type": "string"
+    }
+  },
+  "variables": {
+    "podsSubnetName": "pods-subnet",
+    "aksPodsSubnetCidr": "10.243.0.0/16",
+    "podsSubnetName2": "connection-subnet",
+    "aksPodsSubnetCidr2": "10.150.0.0/16",
+    "podsSubnetName3": "syrup-subnet",
+    "aksPodsSubnetCidr3": "10.160.0.0/16",
+    "podsSubnetName4": "docker-subnet",
+    "aksPodsSubnetCidr4": "10.170.0.0/16",
+    "aksVmSubnetName": "vm-subnet",
+    "aksVmSubnetCidr": "10.100.0.0/16"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('vnetName'), '/', variables('podsSubnetName'))]",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "addressPrefix": "[variables('aksPodsSubnetCidr')]",
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('vnetName'), '/', variables('podsSubnetName2'))]",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "addressPrefix": "[variables('aksPodsSubnetCidr2')]",
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('vnetName'), '/', variables('podsSubnetName3'))]",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "addressPrefix": "[variables('aksPodsSubnetCidr3')]",
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('vnetName'), '/', variables('podsSubnetName4'))]",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "addressPrefix": "[variables('aksPodsSubnetCidr4')]",
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('vnetName'), '/', variables('aksVmSubnetName'))]",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "addressPrefix": "[variables('aksVmSubnetCidr')]",
+        "serviceEndpoints": [
+        ],
+        "delegations": [
+        ],
+        "privateEndpointNetworkPolicies": "Enabled",
+        "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    }
+  ],
+  "outputs": {
+    "aksPodsSubnetId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('podsSubnetName'))]"
+    },
+    "aksPodsSubnetId2": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('podsSubnetName2'))]"
+    },
+    "aksPodsSubnetId3": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('podsSubnetName3'))]"
+    },
+    "aksPodsSubnetId4": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('podsSubnetName4'))]"
+    },
+    "aksVmSubnetId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('aksVmSubnetName'))]"
+    }
+  }
+}

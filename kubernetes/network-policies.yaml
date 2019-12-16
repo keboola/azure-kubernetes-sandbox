@@ -1,0 +1,81 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-dns
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # allow DNS resolution
+    - ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-internet
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: docker
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            # allow all IPs
+            cidr: 0.0.0.0/0
+            except:
+              # except pods subnet
+              - 10.0.0.0/8
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-vm-subnet
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: docker
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            # allow all vm subnet IPs
+            cidr: 10.100.0.0/16
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-k8-service
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: docker
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            # allow all IPs
+            cidr: 10.243.0.0/16

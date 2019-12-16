@@ -1,0 +1,103 @@
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clusterName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of your existing AKS cluster."
+      }
+    },
+    "vnetConnectionSubnetId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The Vnet subnet resource ID for your existing AKS cluster."
+      }
+    },
+    "vnetSyrupSubnetId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The Vnet subnet resource ID for your existing AKS cluster."
+      }
+    },
+    "vnetDockerSubnetId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "The Vnet subnet resource ID for your existing AKS cluster."
+      }
+    }
+  },
+  "variables": {
+    "agentPoolProfiles": {
+      "maxPods": 30,
+      "osDiskSizeGB": 0,
+      "agentCount": 2,
+      "agentVmSize": "Standard_B2s",
+      "osType": "Linux"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-06-01",
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "name": "[concat(parameters('clusterName'),'/', 'connection')]",
+      "location": "[resourceGroup().location]",
+      "condition": "[not(empty(parameters('vnetConnectionSubnetId')))]",
+      "properties": {
+        "maxPods": "[variables('agentPoolProfiles').maxPods]",
+        "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
+        "count": "[variables('agentPoolProfiles').agentCount]",
+        "vmSize": "[variables('agentPoolProfiles').agentVmSize]",
+        "osType": "[variables('agentPoolProfiles').osType]",
+        "storageProfile": "ManagedDisks",
+        "type": "VirtualMachineScaleSets",
+        "vnetSubnetID": "[parameters('vnetConnectionSubnetId')]",
+        "nodeTaints": [
+          "app=connection:NoSchedule"
+        ]
+      }
+    },
+    {
+      "apiVersion": "2019-06-01",
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "name": "[concat(parameters('clusterName'),'/', 'syrup')]",
+      "location": "[resourceGroup().location]",
+      "condition": "[not(empty(parameters('vnetSyrupSubnetId')))]",
+      "properties": {
+        "maxPods": "[variables('agentPoolProfiles').maxPods]",
+        "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
+        "count": "[variables('agentPoolProfiles').agentCount]",
+        "vmSize": "[variables('agentPoolProfiles').agentVmSize]",
+        "osType": "[variables('agentPoolProfiles').osType]",
+        "storageProfile": "ManagedDisks",
+        "type": "VirtualMachineScaleSets",
+        "vnetSubnetID": "[parameters('vnetSyrupSubnetId')]",
+        "nodeTaints": [
+          "app=syrup:NoSchedule"
+        ]
+      }
+    },
+    {
+      "apiVersion": "2019-06-01",
+      "type": "Microsoft.ContainerService/managedClusters/agentPools",
+      "name": "[concat(parameters('clusterName'),'/', 'dockerrunner')]",
+      "location": "[resourceGroup().location]",
+      "condition": "[not(empty(parameters('vnetDockerSubnetId')))]",
+      "properties": {
+        "maxPods": "[variables('agentPoolProfiles').maxPods]",
+        "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
+        "count": "[variables('agentPoolProfiles').agentCount]",
+        "vmSize": "Standard_D1_v2",
+        "osType": "[variables('agentPoolProfiles').osType]",
+        "storageProfile": "ManagedDisks",
+        "type": "VirtualMachineScaleSets",
+        "vnetSubnetID": "[parameters('vnetDockerSubnetId')]",
+        "nodeTaints": [
+          "app=docker-runner:NoSchedule"
+        ]
+      }
+    }
+  ]
+}
