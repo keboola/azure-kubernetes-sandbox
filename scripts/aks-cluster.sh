@@ -41,4 +41,5 @@ az group deployment create \
     agentCount=$AKS_VM_COUNT \
     agentVMSize=$AKS_VM_SIZE \
     vnetSubnetID=$AKS_PODS_SUBNET_ID \
+    kubernetesVersion="1.15.5" \
     clusterName=$CLUSTER_NAME
