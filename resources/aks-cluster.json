@@ -138,7 +138,6 @@
         },
         "networkProfile": {
           "networkPlugin": "azure",
-          "networkPolicy": "calico",
           "loadBalancerSku": "Standard",
           "serviceCidr": "10.1.0.0/16",
           "dnsServiceIP": "10.1.0.10",
