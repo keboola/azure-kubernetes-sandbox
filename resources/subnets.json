@@ -9,6 +9,7 @@
   },
   "variables": {
     "podsSubnetName": "pods-subnet",
+    "networkSecurityGroupName": "pods-subnet-nsg",
     "aksPodsSubnetCidr": "10.243.0.0/16",
     "podsSubnetName2": "connection-subnet",
     "aksPodsSubnetCidr2": "10.150.0.0/16",
@@ -24,10 +25,26 @@
       "type": "Microsoft.Network/virtualNetworks/subnets",
       "name": "[concat(parameters('vnetName'), '/', variables('podsSubnetName'))]",
       "apiVersion": "2019-06-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+      ],
       "properties": {
         "addressPrefix": "[variables('aksPodsSubnetCidr')]",
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+        },
         "privateEndpointNetworkPolicies": "Enabled",
         "privateLinkServiceNetworkPolicies": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2019-08-01",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('networkSecurityGroupName')]",
+      "properties": {
+        "securityRules": [
+        ]
       }
     },
     {

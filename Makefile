@@ -26,3 +26,5 @@ node-pools: aks-cluster just-node-pools
 
 get-credentials:
 	az aks get-credentials --resource-group $(RESOURCE_GROUP) --name $(CLUSTER_NAME)
+pods-subnet-nsg:
+	./scripts/subnet-nsg.sh
