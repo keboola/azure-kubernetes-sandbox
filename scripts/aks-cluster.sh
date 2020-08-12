@@ -5,6 +5,7 @@ SP_NAME=${SP_NAME-$RESOURCE_GROUP-aks-sandbox-service-principal}
 AKS_VM_COUNT=${AKS_VM_COUNT-2}
 AKS_VM_SIZE=${AKS_VM_SIZE-Standard_B2s}
 KEBOOLA_STACK=${KEBOOLA_STACK-devel}
+KUBERNETES_VERSION=${KUBERNETES_VERSION-1.15.11}
 
 # Check if aks is created and if not then delete service principal
 #AKS_CREATED_CLUSTER_NAME=`az aks list --resource-group $RESOURCE_GROUP --query "[?name=='$CLUSTER_NAME'] | [0].name" --output tsv`
@@ -13,7 +14,7 @@ KEBOOLA_STACK=${KEBOOLA_STACK-devel}
 #  sleep 2
 #fi
 
-KUBERNETES_VERSION="1.15.11"
+
 
 DEFAULT_SUBNET_ID=`az group deployment show \
   --name subnets \
