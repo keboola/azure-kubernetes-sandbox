@@ -7,39 +7,70 @@ AKS_VM_SIZE=${AKS_VM_SIZE-Standard_B2s}
 KEBOOLA_STACK=${KEBOOLA_STACK-devel}
 
 # Check if aks is created and if not then delete service principal
-AKS_CREATED_CLUSTER_NAME=`az aks list --resource-group $RESOURCE_GROUP --query "[?name=='$CLUSTER_NAME'] | [0].name" --output tsv`
-if [ "$AKS_CREATED_CLUSTER_NAME" = "" ]; then
-  az ad sp delete --id http://$SP_NAME || true
-  sleep 2
-fi
+#AKS_CREATED_CLUSTER_NAME=`az aks list --resource-group $RESOURCE_GROUP --query "[?name=='$CLUSTER_NAME'] | [0].name" --output tsv`
+#if [ "$AKS_CREATED_CLUSTER_NAME" = "" ]; then
+#  az ad sp delete --id http://$SP_NAME || true
+#  sleep 2
+#fi
 
-# create service principal if it doesn exits
-APP_ID=`az ad sp list --display-name $SP_NAME --output tsv --query "[].appId"`
-if [ "$APP_ID" = "" ]; then
-  SP=`az ad sp create-for-rbac --name http://$SP_NAME --output json`
-  APP_ID=$(echo $SP | jq -r .appId)
-  PASSWORD=$(echo $SP | jq -r .password)
-  # Wait 15 seconds to make sure that service principal has propagated
-  sleep 15
-  # Assign the service principal Contributor permissions to the virtual network resource
-  VNET_ID=`az group deployment show --resource-group $RESOURCE_GROUP --name aks-vnet --query "properties.outputs.vnetId.value" --output tsv`
-  az role assignment create --assignee $APP_ID --scope $VNET_ID --role Contributor
-  sleep 10
-fi
+KUBERNETES_VERSION="1.15.11"
 
-AKS_PODS_SUBNET_ID=`az group deployment show --resource-group $RESOURCE_GROUP --name subnets --query "properties.outputs.aksPodsSubnetId.value" --output tsv`
+DEFAULT_SUBNET_ID=`az group deployment show \
+  --name subnets \
+  --resource-group $RESOURCE_GROUP \
+  --output tsv \
+  --query "properties.outputs.aksPodsSubnetId.value"`
 
-echo "Creating AKS cluster" $CLUSTER_NAME "..."
+
 
 az group deployment create \
-  --name aks-research-cluster \
+  --name kbc-aks \
   --resource-group $RESOURCE_GROUP \
   --template-file ./resources/aks-cluster.json \
   --parameters keboolaStack=$KEBOOLA_STACK \
-    servicePrincipalClientId=$APP_ID \
-    servicePrincipalClientSecret=$PASSWORD \
-    agentCount=$AKS_VM_COUNT \
-    agentVMSize=$AKS_VM_SIZE \
-    vnetSubnetID=$AKS_PODS_SUBNET_ID \
-    kubernetesVersion="1.15.5" \
-    clusterName=$CLUSTER_NAME
+    defaultSubnetID=$DEFAULT_SUBNET_ID \
+    defaultNodePoolVMSize="Standard_B2s" \
+    defaultNodePoolCount=1 \
+    defaultNodePoolMinCount=1 \
+    defaultNodePoolMaxCount=2 \
+    defaultNodePoolOSDiskSizeGB=30 \
+    kubernetesVersion=$KUBERNETES_VERSION
+
+CLUSTER_NAME=`az group deployment show \
+  --name kbc-aks \
+  --resource-group $RESOURCE_GROUP \
+  --output tsv \
+  --query "properties.outputs.clusterName.value"`
+
+AKS_IDENTITY_ID=`az group deployment show \
+  --name kbc-aks \
+  --resource-group $RESOURCE_GROUP \
+  --output tsv \
+  --query "properties.outputs.aksIdentityId.value"`
+
+VNET_ID=`az group deployment show \
+  --resource-group $RESOURCE_GROUP \
+  --name aks-vnet \
+  --query "properties.outputs.vnetId.value" \
+  --output tsv`
+
+az role assignment create --assignee $AKS_IDENTITY_ID --role "Network Contributor" --scope $VNET_ID
+
+AKS_NODE_RESOURCE_GROUP_NAME=`az group deployment show \
+  --name kbc-aks \
+  --resource-group $RESOURCE_GROUP \
+  --output tsv \
+  --query "properties.outputs.aksNodeResourceGroup.value"`
+
+AKS_NODE_RESOURCE_GROUP_ID=`az group show --name $AKS_NODE_RESOURCE_GROUP_NAME --query id --output tsv`
+RESOURCE_GROUP_ID=`az group show --name $RESOURCE_GROUP --query id --output tsv`
+
+AKS_AGENTPOOOL_IDENTITY_ID=`az identity list \
+    --query "[?name=='$CLUSTER_NAME-agentpool'].principalId" \
+    --output tsv`
+
+az role assignment create --assignee $AKS_AGENTPOOOL_IDENTITY_ID --role "Virtual Machine Contributor" --scope $AKS_NODE_RESOURCE_GROUP_ID
+az role assignment create --assignee $AKS_AGENTPOOOL_IDENTITY_ID --role "Managed Identity Operator" --scope $RESOURCE_GROUP_ID
+
+az aks get-credentials --name $CLUSTER_NAME --resource-group $RESOURCE_GROUP --overwrite
+

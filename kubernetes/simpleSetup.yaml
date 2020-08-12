@@ -1,0 +1,124 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: defaultpod
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: api
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.8
+          ports:
+            - containerPort: 80
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: connection-api
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: connection-api
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: connection-api
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.8
+          ports:
+            - containerPort: 80
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - key: "app"
+          operator: "Equal"
+          value: "connection"
+          effect: "NoSchedule"
+      nodeSelector:
+        agentpool: connection
+
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: worker
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: worker
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: busybox-curl
+          image: odise/busybox-curl
+          command:
+            - sleep
+            - "3600"
+          imagePullPolicy: IfNotPresent
+      tolerations:
+        - key: "app"
+          operator: "Equal"
+          value: "syrup"
+          effect: "NoSchedule"
+      nodeSelector:
+        agentpool: syrup
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: connection-api
+  name: connection-api
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: api
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: connection-api-pdb
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: connection-api

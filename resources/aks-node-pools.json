@@ -1,3 +1,4 @@
+  {
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -32,7 +33,7 @@
   "variables": {
     "agentPoolProfiles": {
       "maxPods": 30,
-      "osDiskSizeGB": 0,
+      "osDiskSizeGB": 30,
       "agentCount": 2,
       "agentVmSize": "Standard_B2s",
       "osType": "Linux"
@@ -40,63 +41,78 @@
   },
   "resources": [
     {
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2020-03-01",
       "type": "Microsoft.ContainerService/managedClusters/agentPools",
       "name": "[concat(parameters('clusterName'),'/', 'connection')]",
       "location": "[resourceGroup().location]",
       "condition": "[not(empty(parameters('vnetConnectionSubnetId')))]",
       "properties": {
-        "maxPods": "[variables('agentPoolProfiles').maxPods]",
         "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
-        "count": "[variables('agentPoolProfiles').agentCount]",
         "vmSize": "[variables('agentPoolProfiles').agentVmSize]",
-        "osType": "[variables('agentPoolProfiles').osType]",
+        "maxPods": 50,
+        "osType": "Linux",
         "storageProfile": "ManagedDisks",
         "type": "VirtualMachineScaleSets",
+        "enableNodePublicIP": false,
         "vnetSubnetID": "[parameters('vnetConnectionSubnetId')]",
+        "enableAutoScaling": true,
+        "count": 1,
+        "minCount": 1,
+        "maxCount": 2,
         "nodeTaints": [
           "app=connection:NoSchedule"
-        ]
+        ],
+        "mode": "User"
       }
     },
     {
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2020-03-01",
       "type": "Microsoft.ContainerService/managedClusters/agentPools",
       "name": "[concat(parameters('clusterName'),'/', 'syrup')]",
       "location": "[resourceGroup().location]",
       "condition": "[not(empty(parameters('vnetSyrupSubnetId')))]",
       "properties": {
-        "maxPods": "[variables('agentPoolProfiles').maxPods]",
         "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
-        "count": "[variables('agentPoolProfiles').agentCount]",
         "vmSize": "[variables('agentPoolProfiles').agentVmSize]",
-        "osType": "[variables('agentPoolProfiles').osType]",
+        "maxPods": 50,
+        "osType": "Linux",
         "storageProfile": "ManagedDisks",
         "type": "VirtualMachineScaleSets",
+        "enableNodePublicIP": false,
         "vnetSubnetID": "[parameters('vnetSyrupSubnetId')]",
+        "enableAutoScaling": true,
+        "count": 1,
+        "minCount": 1,
+        "maxCount": 2,
         "nodeTaints": [
           "app=syrup:NoSchedule"
-        ]
+        ],
+        "mode": "User"
       }
     },
     {
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2020-03-01",
       "type": "Microsoft.ContainerService/managedClusters/agentPools",
       "name": "[concat(parameters('clusterName'),'/', 'dockerrunner')]",
       "location": "[resourceGroup().location]",
       "condition": "[not(empty(parameters('vnetDockerSubnetId')))]",
       "properties": {
-        "maxPods": "[variables('agentPoolProfiles').maxPods]",
         "osDiskSizeGB": "[variables('agentPoolProfiles').osDiskSizeGB]",
-        "count": "[variables('agentPoolProfiles').agentCount]",
         "vmSize": "Standard_D1_v2",
-        "osType": "[variables('agentPoolProfiles').osType]",
+        "maxPods": 50,
+        "osType": "Linux",
         "storageProfile": "ManagedDisks",
         "type": "VirtualMachineScaleSets",
+        "enableNodePublicIP": false,
         "vnetSubnetID": "[parameters('vnetDockerSubnetId')]",
+        "enableAutoScaling": true,
+        "count": 1,
+        "minCount": 1,
+        "maxCount": 2,
         "nodeTaints": [
           "app=docker-runner:NoSchedule"
-        ]
+        ],
+        "mode": "User"
       }
     }
   ]

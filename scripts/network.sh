@@ -17,6 +17,7 @@ echo "Creating subnets.."
 az group deployment create \
   --name subnets \
   --resource-group $RESOURCE_GROUP \
-  --template-file ./resources/subnets.json
+  --template-file ./resources/subnets.json \
+  --parameters vnetName=$VNET_NAME
 
 
