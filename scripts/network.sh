@@ -21,3 +21,4 @@ az group deployment create \
   --parameters vnetName=$VNET_NAME
 
 
+#test
