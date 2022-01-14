@@ -1,4 +1,5 @@
 #github.com outbound test
+# github.com test 2
 export RESOURCE_GROUP ?= kacurez-dev
 export SP_NAME ?= $(RESOURCE_GROUP)-aks-sandbox-service-principal
 export CLUSTER_NAME ?= kacurez-dev
