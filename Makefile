@@ -1,3 +1,4 @@
+#prod test
 #github.com outbound test
 # github.com test 2
 export RESOURCE_GROUP ?= kacurez-dev
