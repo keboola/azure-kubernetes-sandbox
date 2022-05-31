@@ -20,3 +20,7 @@ run curl to vm-server(10.100.0.4)
 ```
 the curl request to the vm-server should return clients IP address
 Check the returned IP address whether it is the PODs IP address or Nodes internal IP address(kubectl get nodes -o wide)
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
